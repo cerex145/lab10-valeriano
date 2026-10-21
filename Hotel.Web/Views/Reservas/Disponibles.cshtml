@@ -1,0 +1,89 @@
+@model DisponibilidadViewModel
+@{
+    ViewData["Title"] = "Disponibilidad";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Disponibilidad</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">Ver reservas</a>
+</div>
+
+<form asp-action="Disponibles" method="get" class="row g-3 align-items-end mb-3">
+    <div class="col-sm-4">
+        <label asp-for="Ingreso" class="form-label">Fecha de ingreso</label>
+        <input asp-for="Ingreso" type="date" class="form-control" />
+    </div>
+    <div class="col-sm-4">
+        <label asp-for="Salida" class="form-label">Fecha de salida</label>
+        <input asp-for="Salida" type="date" class="form-control" />
+    </div>
+    <div class="col-sm-4">
+        <button type="submit" class="btn btn-primary w-100">Buscar disponibilidad</button>
+    </div>
+</form>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@error.ErrorMessage</div>
+        }
+    </div>
+}
+
+@if (Model.Buscado)
+{
+    var ing = Model.Ingreso!.Value;
+    var sal = Model.Salida!.Value;
+
+    <p class="text-muted">
+        @Model.Noches noche@(Model.Noches == 1 ? "" : "s") ·
+        @ing.ToString("dd/MM/yyyy") a @sal.ToString("dd/MM/yyyy") ·
+        @Model.Habitaciones.Count habitación(es) libre(s)
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Tipo</th>
+                    <th>Piso</th>
+                    <th>Capacidad</th>
+                    <th class="text-end">Precio / noche</th>
+                    <th class="text-end">Noches</th>
+                    <th class="text-end">Total estimado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var h in Model.Habitaciones)
+                {
+                    <tr>
+                        <td>@h.Numero</td>
+                        <td>@h.Tipo</td>
+                        <td>@h.Piso</td>
+                        <td>@h.Capacidad</td>
+                        <td class="text-end">S/ @h.PrecioNoche.ToString("N2")</td>
+                        <td class="text-end">@Model.Noches</td>
+                        <td class="text-end">S/ @Model.TotalEstimado(h).ToString("N2")</td>
+                        <td>
+                            <a class="btn btn-sm btn-success"
+                               asp-action="Create"
+                               asp-route-habitacionId="@h.HabitacionId"
+                               asp-route-ingreso="@ing.ToString("yyyy-MM-dd")"
+                               asp-route-salida="@sal.ToString("yyyy-MM-dd")">Reservar</a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Habitaciones.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">No hay habitaciones libres en ese rango.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

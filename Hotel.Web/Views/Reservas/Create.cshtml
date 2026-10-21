@@ -1,0 +1,105 @@
+@model Reserva
+@{
+    ViewData["Title"] = "Nueva reserva";
+    var precios = ViewBag.Precios as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+    var hoy = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd");
+    var preciosJson = System.Text.Json.JsonSerializer.Serialize(precios);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Nueva reserva</h1>
+    <a asp-action="Disponibles" class="btn btn-outline-secondary">Ver disponibilidad</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+            <div class="mb-3">
+                <label asp-for="HuespedId" class="form-label">Huésped</label>
+                <select asp-for="HuespedId" asp-items="(SelectList)ViewBag.Huespedes" class="form-select"
+                        data-val-required="Seleccione un huésped.">
+                    <option value="">-- Seleccione un huésped --</option>
+                </select>
+                <span asp-validation-for="HuespedId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="HabitacionId" class="form-label">Habitación</label>
+                <select asp-for="HabitacionId" asp-items="(SelectList)ViewBag.Habitaciones" class="form-select" id="selHabitacion"
+                        data-val-required="Seleccione una habitación.">
+                    <option value="">-- Seleccione una habitación --</option>
+                </select>
+                <span asp-validation-for="HabitacionId" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6 mb-3">
+                    <label asp-for="FechaIngreso" class="form-label">Fecha de ingreso</label>
+                    <input asp-for="FechaIngreso" type="date" class="form-control" id="txtIngreso"
+                           data-val-required="Indique la fecha de ingreso." />
+                    <span asp-validation-for="FechaIngreso" class="text-danger"></span>
+                </div>
+                <div class="col-sm-6 mb-3">
+                    <label asp-for="FechaSalida" class="form-label">Fecha de salida</label>
+                    <input asp-for="FechaSalida" type="date" class="form-control" id="txtSalida"
+                           data-val-required="Indique la fecha de salida." />
+                    <span asp-validation-for="FechaSalida" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Observaciones" class="form-label">Observaciones</label>
+                <textarea asp-for="Observaciones" class="form-control" rows="3" maxlength="200"></textarea>
+                <span asp-validation-for="Observaciones" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Registrar reserva</button>
+            <a asp-action="Index" class="btn btn-link">Cancelar</a>
+        </form>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="border rounded p-3">
+            <h2 class="h6">Resumen</h2>
+            <p class="mb-1">Precio por noche: <span id="rPrecio">-</span></p>
+            <p class="mb-1">Noches: <span id="rNoches">-</span></p>
+            <p class="mb-0">Total estimado: <strong id="rTotal">S/ 0.00</strong></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var precios = @Html.Raw(preciosJson);
+            var HOY = '@hoy';
+            var sel = document.getElementById('selHabitacion');
+            var ing = document.getElementById('txtIngreso');
+            var sal = document.getElementById('txtSalida');
+            var fmt = new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            function actualizar() {
+                var precio = precios[sel.value];
+                document.getElementById('rPrecio').textContent = precio ? 'S/ ' + fmt.format(precio) : '-';
+                var noches = 0;
+                if (ing.value && sal.value) {
+                    var dias = (new Date(sal.value) - new Date(ing.value)) / 86400000;
+                    if (dias > 0) noches = Math.round(dias);
+                }
+                document.getElementById('rNoches').textContent = noches || '-';
+                document.getElementById('rTotal').textContent = 'S/ ' + fmt.format(noches * (precio || 0));
+                ing.setCustomValidity(ing.value && ing.value < HOY ? 'La fecha de ingreso no puede ser anterior a hoy.' : '');
+                sal.setCustomValidity(sal.value && ing.value && sal.value <= ing.value ? 'La fecha de salida debe ser posterior a la de ingreso.' : '');
+            }
+
+            [sel, ing, sal].forEach(function (el) {
+                el.addEventListener('change', actualizar);
+                el.addEventListener('input', actualizar);
+            });
+            actualizar();
+        })();
+    </script>
+}

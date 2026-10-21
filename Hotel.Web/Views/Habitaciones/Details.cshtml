@@ -1,0 +1,59 @@
+@model Habitacion
+@{
+    ViewData["Title"] = $"Habitación {Model.Numero}";
+    var reservas = ViewData["Reservas"] as List<Reserva> ?? new List<Reserva>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Habitación @Model.Numero</h1>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.HabitacionId" class="btn btn-outline-primary">Editar</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    </div>
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Tipo</dt>
+    <dd class="col-sm-9">@Model.TipoHabitacion.Nombre</dd>
+    <dt class="col-sm-3">Precio por noche</dt>
+    <dd class="col-sm-9">S/ @Model.TipoHabitacion.PrecioNoche.ToString("N2")</dd>
+    <dt class="col-sm-3">Capacidad</dt>
+    <dd class="col-sm-9">@Model.TipoHabitacion.Capacidad</dd>
+    <dt class="col-sm-3">Piso</dt>
+    <dd class="col-sm-9">@Model.Piso</dd>
+    <dt class="col-sm-3">Situación</dt>
+    <dd class="col-sm-9">@(Model.Activo ? "Activa" : "Dada de baja")</dd>
+</dl>
+
+<a asp-controller="Reservas" asp-action="Create" asp-route-habitacionId="@Model.HabitacionId" class="btn btn-primary mb-4">Reservar esta habitación</a>
+
+<h2 class="h5">Historial de reservas (@reservas.Count)</h2>
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Huésped</th>
+                <th>Ingreso</th>
+                <th>Salida</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in reservas)
+            {
+                <tr>
+                    <td>@r.Huesped.Nombres @r.Huesped.Apellidos</td>
+                    <td>@r.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                    <td>@r.FechaSalida.ToString("dd/MM/yyyy")</td>
+                    <td>@r.Estado</td>
+                </tr>
+            }
+            @if (reservas.Count == 0)
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted">Sin reservas.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

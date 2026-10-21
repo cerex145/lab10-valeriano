@@ -1,0 +1,69 @@
+@model IEnumerable<Habitacion>
+@{
+    ViewData["Title"] = "Habitaciones";
+    var habitaciones = Model.ToList();
+    var tipoFiltro = ViewData["TipoFiltro"] as int?;
+    var activas = (int)(ViewData["TotalActivas"] ?? 0);
+    var ocupadas = (int)(ViewData["OcupadasHoy"] ?? 0);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Habitaciones</h1>
+    <a asp-action="Create" class="btn btn-primary">Nueva habitación</a>
+</div>
+
+<p class="text-muted">Activas: @activas · Ocupadas hoy: @ocupadas · Libres hoy: @(activas - ocupadas) · En el filtro: @habitaciones.Count</p>
+
+<form asp-action="Index" method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-sm-6 col-md-4">
+        <label for="tipoHabitacionId" class="form-label">Tipo de habitación</label>
+        <select id="tipoHabitacionId" name="tipoHabitacionId" class="form-select" asp-items="(SelectList)ViewBag.Tipos">
+            <option value="">Todos los tipos</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-secondary">Filtrar</button>
+        @if (tipoFiltro.HasValue)
+        {
+            <a asp-action="Index" class="btn btn-link">Quitar filtro</a>
+        }
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Tipo</th>
+                <th class="text-end">Precio / noche</th>
+                <th>Capacidad</th>
+                <th>Piso</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var h in habitaciones)
+            {
+                <tr>
+                    <td>@h.Numero</td>
+                    <td>@h.TipoHabitacion.Nombre</td>
+                    <td class="text-end">S/ @h.TipoHabitacion.PrecioNoche.ToString("N2")</td>
+                    <td>@h.TipoHabitacion.Capacidad</td>
+                    <td>@h.Piso</td>
+                    <td class="text-nowrap">
+                        <a asp-action="Details" asp-route-id="@h.HabitacionId" class="btn btn-sm btn-outline-secondary">Detalle</a>
+                        <a asp-action="Edit" asp-route-id="@h.HabitacionId" class="btn btn-sm btn-outline-primary">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@h.HabitacionId" class="btn btn-sm btn-outline-danger">Dar de baja</a>
+                    </td>
+                </tr>
+            }
+            @if (habitaciones.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No hay habitaciones activas.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

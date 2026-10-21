@@ -1,0 +1,9 @@
+html, body { background: #fff; color: #212529; }
+body { min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; }
+.footer { margin-top: auto; }
+.text-danger { color: #dc3545 !important; }
+.field-validation-error { display: block; font-size: .875rem; }
+.input-validation-error { border-color: #dc3545; }
+#transicion { position: fixed; inset: 0; z-index: 2000; background: #fff; display: flex; align-items: center; justify-content: center; }
+#transicion[hidden] { display: none; }

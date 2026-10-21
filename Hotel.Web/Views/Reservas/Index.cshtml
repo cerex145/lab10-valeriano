@@ -1,0 +1,104 @@
+@model IEnumerable<Reserva>
+@{
+    ViewData["Title"] = "Reservas";
+    var reservas = Model.ToList();
+    var estado = ViewData["Estado"] as string;
+    var conteos = ViewData["Conteos"] as Dictionary<string, int> ?? new Dictionary<string, int>();
+
+    int Conteo(string e) => conteos.TryGetValue(e, out var n) ? n : 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Reservas</h1>
+    <div>
+        <a asp-action="Disponibles" class="btn btn-outline-secondary">Disponibilidad</a>
+        <a asp-action="Create" class="btn btn-primary">Nueva reserva</a>
+    </div>
+</div>
+
+<p class="text-muted">
+    Pendientes: @Conteo("Pendiente") · Confirmadas: @Conteo("Confirmada") ·
+    Finalizadas: @Conteo("Finalizada") · Canceladas: @Conteo("Cancelada")
+</p>
+
+<form asp-action="Index" method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-sm-6 col-md-4">
+        <label for="estado" class="form-label">Estado</label>
+        <select id="estado" name="estado" class="form-select">
+            <option value="">Todos los estados</option>
+            @foreach (var e in ReservaRepositorio.Estados)
+            {
+                <option value="@e" selected="@(estado == e)">@e</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-secondary">Filtrar</button>
+        @if (!string.IsNullOrEmpty(estado))
+        {
+            <a asp-action="Index" class="btn btn-link">Quitar filtro</a>
+        }
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Huésped</th>
+                <th>Habitación</th>
+                <th>Ingreso</th>
+                <th>Salida</th>
+                <th class="text-end">Noches</th>
+                <th class="text-end">Total</th>
+                <th>Estado</th>
+                <th>Observaciones</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in reservas)
+            {
+                var noches = r.FechaSalida.DayNumber - r.FechaIngreso.DayNumber;
+                var total = noches * r.Habitacion.TipoHabitacion.PrecioNoche;
+                var cancelable = r.Estado == "Pendiente" || r.Estado == "Confirmada";
+                <tr>
+                    <td>@r.ReservaId</td>
+                    <td>@r.Huesped.Apellidos, @r.Huesped.Nombres</td>
+                    <td>@r.Habitacion.Numero (@r.Habitacion.TipoHabitacion.Nombre)</td>
+                    <td>@r.FechaIngreso.ToString("dd/MM/yyyy")</td>
+                    <td>@r.FechaSalida.ToString("dd/MM/yyyy")</td>
+                    <td class="text-end">@noches</td>
+                    <td class="text-end">S/ @total.ToString("N2")</td>
+                    <td>@r.Estado</td>
+                    <td>@r.Observaciones</td>
+                    <td>
+                        @if (cancelable)
+                        {
+                            <form asp-action="Cancelar" asp-route-id="@r.ReservaId" method="post" class="frmCancelar">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (reservas.Count == 0)
+            {
+                <tr>
+                    <td colspan="10" class="text-center text-muted">No hay reservas.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.frmCancelar').forEach(function (f) {
+            f.addEventListener('submit', function (e) {
+                if (!confirm('¿Cancelar esta reserva?')) e.preventDefault();
+            });
+        });
+    </script>
+}
